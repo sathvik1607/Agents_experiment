@@ -77,7 +77,7 @@ def get_weather(city: str) -> str:
     """
     Get weather for a given city.
     """
-    return f"It's always sunny in {city}!"
+    return f"{city}!"
 
 
 def get_post(id: int) -> dict:
@@ -104,7 +104,7 @@ def get_post(id: int) -> dict:
 
 def create_daily_thought() -> str:
     """
-    Generate a short inspirational thought.
+    Generate a short inspirational thought for motivation.
     """
 
     response = llm.invoke(
@@ -174,8 +174,8 @@ agent = create_agent(
         get_recent_email_subjects
     ],
     system_prompt=(
-        "You are a helpful assistant. "
-        "Use tools whenever they are relevant."
+        "You are a helpful assistant and an agent. "
+        "Use tools whenever they are relevant and make no mistake."
     ),
 )
 
@@ -210,6 +210,3 @@ try:
 
 except Exception as e:
     print(f"Error: {e}")
-
-
-print(get_recent_email_subjects())
