@@ -104,11 +104,11 @@ def get_post(id: int) -> dict:
 
 def create_daily_thought() -> str:
     """
-    Generate a short inspirational thought for motivation.
+    Generate a short motivational thought.
     """
 
     response = llm.invoke(
-        "Generate a short inspirational thought in one sentence."
+        "Generate a short motivational thought in one sentence."
     )
 
     return response.content
