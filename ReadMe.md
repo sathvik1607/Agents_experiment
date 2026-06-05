@@ -38,7 +38,8 @@ https://jsonplaceholder.typicode.com/posts/{id}
 
 ### 💡 Daily Motivational Thought generator
 
-Uses OpenAI to generate a short motivational thought.
+Uses the OpenAI language model to generate a short, inspirational thought that can provide daily motivation and encouragement.
+.
 
 **Example**
 
