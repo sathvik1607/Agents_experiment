@@ -33,3 +33,5 @@ dist/
 htmlcov/
 
 #
+token.json
+credentials.json
