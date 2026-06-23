@@ -1,9 +1,11 @@
 import os
 import sys
-import requests
+from typing import Any
 
+import requests
 from dotenv import load_dotenv
 from langchain.agents import create_agent
+from langchain_core.messages import BaseMessage
 from langchain_openai import ChatOpenAI
 
 # -----------------------------
@@ -13,21 +15,21 @@ load_dotenv(override=True)
 
 api_key = os.getenv("OPENAI_API_KEY")
 
-if api_key:
-    print(
-        f"Loaded key: starts {api_key[:8]}... "
-        f"ends ...{api_key[-4:]} "
-        f"(length {len(api_key)})"
-    )
-else:
+if not api_key:
     raise ValueError("OPENAI_API_KEY not found in environment.")
+
+print(
+    f"Loaded key: starts {api_key[:8]}... "
+    f"ends ...{api_key[-4:]} "
+    f"(length {len(api_key)})"
+)
 
 # -----------------------------
 # Shared LLM
 # -----------------------------
 llm = ChatOpenAI(
     model="gpt-3.5-turbo",
-    temperature=0
+    temperature=0,
 )
 
 # -----------------------------
@@ -40,26 +42,24 @@ def get_weather(city: str) -> str:
     return f"It's always sunny in {city}!"
 
 
-def get_post(id: int) -> dict:
+def get_post(post_id: int) -> dict[str, Any]:
     """
     Fetch a post from JSONPlaceholder by ID.
-    Example: get_post(2)
     """
 
     try:
         response = requests.get(
-            f"https://jsonplaceholder.typicode.com/posts/{id}",
-            timeout=10
+            f"https://jsonplaceholder.typicode.com/posts/{post_id}",
+            timeout=10,
         )
 
         response.raise_for_status()
 
-        return response.json()
+        data: dict[str, Any] = response.json()
+        return data
 
     except requests.RequestException as e:
-        return {
-            "error": str(e)
-        }
+        return {"error": str(e)}
 
 
 def create_daily_thought() -> str:
@@ -67,22 +67,22 @@ def create_daily_thought() -> str:
     Generate a short inspirational thought.
     """
 
-    response = llm.invoke(
+    response: BaseMessage = llm.invoke(
         "Generate a short inspirational thought in one sentence."
     )
 
-    return response.content
+    return str(response.content)
 
 
 # -----------------------------
 # Agent
 # -----------------------------
 agent = create_agent(
-    model="openai:gpt-3.5-turbo",
+    model=llm,
     tools=[
         get_weather,
         get_post,
-        create_daily_thought
+        create_daily_thought,
     ],
     system_prompt=(
         "You are a helpful assistant. "
@@ -91,33 +91,40 @@ agent = create_agent(
 )
 
 # -----------------------------
-# CLI Input
+# Main
 # -----------------------------
-if len(sys.argv) < 2:
-    print(
-        'Usage: python dynamic_agent_input.py "your question"'
-    )
-    sys.exit(1)
+def main() -> None:
 
-user_input = " ".join(sys.argv[1:])
+    if len(sys.argv) < 2:
+        print(
+            'Usage: python dynamic_agent_input.py "your question"'
+        )
+        sys.exit(1)
 
-# -----------------------------
-# Execute Agent
-# -----------------------------
-try:
-    result = agent.invoke(
-        {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": user_input
-                }
-            ]
-        }
-    )
+    user_input = " ".join(sys.argv[1:])
 
-    print("\n=== RESPONSE ===\n")
-    print(result["messages"][-1].content)
+    try:
+        result = agent.invoke(
+            {
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": user_input,
+                    }
+                ]
+            }
+        )
 
-except Exception as e:
-    print(f"Error: {e}")
+        print("\n=== RESPONSE ===\n")
+
+        messages = result["messages"]
+        last_message: BaseMessage = messages[-1]
+
+        print(str(last_message.content))
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+if __name__ == "__main__":
+    main()
